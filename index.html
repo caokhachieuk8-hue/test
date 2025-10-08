@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SportsDash — Dashboard mô phỏng</title>
+  <style>
+    /* Reset + simple utility */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body,#app{height:100%}
+    body{font-family:Inter, system-ui, -apple-system, Roboto, "Segoe UI", "Helvetica Neue", Arial;background:#0f1114;color:#e6eef6}
+
+    /* Layout */
+    .app{display:flex;height:100vh;overflow:hidden}
+    .sidebar{width:260px;background:#0b0c0e;border-right:1px solid rgba(255,255,255,0.03);padding:20px;display:flex;flex-direction:column;gap:18px}
+    .brand{font-weight:700;letter-spacing:1px;padding:8px 10px;border-radius:8px;background:linear-gradient(90deg,#0ea5a3,#3b82f6);color:#08121a;text-align:center}
+    .nav{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+    .nav a{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;color:rgba(230,238,246,0.85);text-decoration:none}
+    .nav a:hover{background:rgba(255,255,255,0.02)}
+    .nav a .dot{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center}
+
+    .main{flex:1;display:flex;flex-direction:column;gap:18px;padding:18px;overflow:auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .search{flex:1;margin:0 12px}
+    .search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:#0b0c0e;color:inherit}
+
+    /* content area */
+    .content{display:flex;gap:18px}
+    .left-pane{flex:1;display:flex;flex-direction:column;gap:14px}
+    .cards{display:flex;gap:12px;overflow:auto}
+    .card{min-width:180px;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    .card h4{font-size:14px;margin-bottom:8px}
+
+    .matches{background:rgba(255,255,255,0.02);border-radius:10px;padding:12px}
+    .match{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.01);margin-bottom:10px}
+    .teams{display:flex;gap:12px;align-items:center}
+    .team{display:flex;flex-direction:column;align-items:center;min-width:110px}
+    .team .name{font-weight:600}
+    .score{font-size:20px;font-weight:700;background:rgba(255,255,255,0.03);padding:6px 12px;border-radius:8px}
+
+    /* right pane */
+    .right-pane{width:360px;display:flex;flex-direction:column;gap:14px}
+    .panel{background:rgba(255,255,255,0.02);border-radius:10px;padding:12px}
+    .scoreboard{height:180px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+
+    .chat{display:flex;flex-direction:column;gap:10px;height:360px}
+    .messages{flex:1;overflow:auto;padding-right:6px}
+    .msg{padding:8px 10px;border-radius:8px;margin-bottom:8px;max-width:85%}
+    .msg.you{background:linear-gradient(90deg,#0ea5a3,#06b6d4);align-self:flex-end;color:#021;} 
+    .msg.other{background:rgba(255,255,255,0.03)}
+    .input-row{display:flex;gap:8px}
+    .input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+
+    /* small screens */
+    @media (max-width:1000px){.sidebar{display:none}.right-pane{display:none}}
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar">
+      <div class="brand">SportsDash</div>
+      <nav class="nav">
+        <a href="#"><div class="dot">🏠</div> Home</a>
+        <a href="#"><div class="dot">⚽</div> Soccer</a>
+        <a href="#"><div class="dot">🏀</div> Basketball</a>
+        <a href="#"><div class="dot">🎾</div> Tennis</a>
+        <a href="#"><div class="dot">📊</div> Results</a>
+        <a href="#"><div class="dot">⚙️</div> Settings</a>
+      </nav>
+      <div style="margin-top:auto;font-size:13px;color:rgba(230,238,246,0.6)">Made for learning • Không phải sản phẩm thật</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="inplayBtn" style="padding:8px 12px;border-radius:8px;border:none;background:#0ea5a3;color:#021;font-weight:700">In-Play</button>
+          <button id="upcomingBtn" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit">Upcoming</button>
+          <div class="search"><input id="q" placeholder="Search league or team..."/></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:13px;color:rgba(230,238,246,0.7)">Logged in as <strong>Guest</strong></div>
+          <div style="background:rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px">Profile</div>
+        </div>
+      </div>
+
+      <section class="content">
+        <div class="left-pane">
+          <div class="cards" id="quickCards"></div>
+
+          <div class="matches" id="matchesList">
+            <!-- matches populated by JS -->
+          </div>
+        </div>
+
+        <aside class="right-pane">
+          <div class="panel scoreboard" id="scoreboard">
+            <div style="text-align:center">
+              <div style="font-size:14px;opacity:0.8">Live</div>
+              <div style="font-size:22px;font-weight:800;margin-top:8px">VN League • 1 : 0</div>
+              <div style="margin-top:6px;opacity:0.7">Halftime</div>
+            </div>
+          </div>
+
+          <div class="panel chat">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong>Chat</strong>
+              <small style="opacity:0.6">Public</small>
+            </div>
+            <div class="messages" id="messages"></div>
+            <div class="input-row">
+              <input id="msgIn" placeholder="Gõ tin nhắn..."/>
+              <button id="sendBtn" style="padding:8px 12px;border-radius:8px;border:none;background:#3b82f6">Send</button>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Sample quick cards
+    const quick = [
+      {title:'Top Leagues',sub:'World'},
+      {title:'Live Now',sub:'12 matches'},
+      {title:'Highlights',sub:'Today'},
+      {title:'Standings',sub:'Overview'}
+    ];
+    const qc = document.getElementById('quickCards');
+    quick.forEach(k=>{
+      const el = document.createElement('div');el.className='card';
+      el.innerHTML = `<h4>${k.title}</h4><div style="opacity:0.7;font-size:13px">${k.sub}</div>`;
+      qc.appendChild(el);
+    });
+
+    // Sample matches data
+    const matches = [
+      {league:'Thailand League Cup',home:'VRN Muangnont FC',away:'Thonburi United',score:'1 : 0',time:'92:38'},
+      {league:'Vietnam National League Women',home:'Cong An TP HCM FC(W)',away:'Hanoi W',score:'0 : 0',time:'61:43'},
+      {league:'Friendly',home:'Local XI',away:'City Stars',score:'2 : 2',time:'FT'}
+    ];
+    const list = document.getElementById('matchesList');
+    matches.forEach(m=>{
+      const el = document.createElement('div');el.className='match';
+      el.innerHTML = `
+        <div style="flex:1">
+          <div style="font-size:13px;opacity:0.7;margin-bottom:6px">${m.league} • ${m.time}</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="teams">
+              <div class="team"><div class="name">${m.home}</div><div style="opacity:0.6;font-size:12px">Home</div></div>
+              <div class="score">${m.score}</div>
+              <div class="team"><div class="name">${m.away}</div><div style="opacity:0.6;font-size:12px">Away</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="width:110px;text-align:right">
+          <button style="padding:6px 10px;border-radius:8px;border:none;background:rgba(255,255,255,0.03)">Markets</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+
+    // Simple chat demo
+    const msgs = document.getElementById('messages');
+    const sample = [
+      {who:'other',text:'Chào mọi người!'},
+      {who:'other',text:'Trận VN đang hấp dẫn.'},
+      {who:'you',text:'2+ home nổi lên'}
+    ];
+    function renderMessages(){
+      msgs.innerHTML='';
+      sample.forEach(m=>{
+        const d = document.createElement('div');d.className='msg '+(m.who==='you'?'you':'other');d.textContent=m.text;msgs.appendChild(d);
+      });
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    renderMessages();
+
+    document.getElementById('sendBtn').addEventListener('click',()=>{
+      const v = document.getElementById('msgIn').value.trim();
+      if(!v) return; sample.push({who:'you',text:v}); document.getElementById('msgIn').value=''; renderMessages();
+    });
+
+    // Simple search filter
+    document.getElementById('q').addEventListener('input',(e)=>{
+      const q = e.target.value.toLowerCase();
+      Array.from(document.querySelectorAll('.match')).forEach((el,i)=>{
+        const m = matches[i];
+        const text = (m.league+' '+m.home+' '+m.away).toLowerCase();
+        el.style.display = text.includes(q)?'flex':'none';
+      });
+    });
+  </script>
+</body>
+</html>
